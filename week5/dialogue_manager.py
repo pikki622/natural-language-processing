@@ -12,7 +12,9 @@ class ThreadRanker(object):
         self.thread_embeddings_folder = paths['THREAD_EMBEDDINGS_FOLDER']
 
     def __load_embeddings_by_tag(self, tag_name):
-        embeddings_path = os.path.join(self.thread_embeddings_folder, tag_name + ".pkl")
+        embeddings_path = os.path.join(
+            self.thread_embeddings_folder, f"{tag_name}.pkl"
+        )
         thread_ids, thread_embeddings = unpickle_file(embeddings_path)
         return thread_ids, thread_embeddings
 

@@ -1,11 +1,11 @@
 from collections import OrderedDict
 
 def _update_chunk(candidate, prev, current_tag, current_chunk, current_pos, prediction=False):
-    if candidate == 'B-' + current_tag:
+    if candidate == f'B-{current_tag}':
         if len(current_chunk) > 0 and len(current_chunk[-1]) == 1:
                 current_chunk[-1].append(current_pos - 1)
         current_chunk.append([current_pos])
-    elif candidate == 'I-' + current_tag:
+    elif candidate == f'I-{current_tag}':
         if prediction and (current_pos == 0 or current_pos > 0 and prev.split('-', 1)[-1] != current_tag):
             current_chunk.append([current_pos])
         if not prediction and (current_pos == 0 or current_pos > 0 and prev == 'O'):
@@ -84,7 +84,7 @@ def _print_tag_metrics(tag, tag_results):
 
 def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False):
     # Find all tags
-    tags = sorted(set(tag[2:] for tag in y_true + y_pred if tag != 'O'))
+    tags = sorted({tag[2:] for tag in y_true + y_pred if tag != 'O'})
 
     results = OrderedDict((tag, OrderedDict()) for tag in tags)
     n_tokens = len(y_true)
@@ -93,8 +93,8 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False):
     # For eval_conll_try we find all chunks in the ground truth and prediction
     # For each chunk we store starting and ending indices
     for tag in tags:
-        true_chunk = list()
-        predicted_chunk = list()
+        true_chunk = []
+        predicted_chunk = []
         for position in range(n_tokens):
             _update_chunk(y_true[position], y_true[position - 1], tag, true_chunk, position)
             _update_chunk(y_pred[position], y_pred[position - 1], tag, predicted_chunk, position, True)

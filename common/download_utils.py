@@ -32,7 +32,7 @@ def download_from_github(version, fn, target_dir, force=False):
     url = REPOSITORY_PATH + "/releases/download/{0}/{1}".format(version, fn)
     file_path = os.path.join(target_dir, fn)
     if os.path.exists(file_path) and not force:
-        print("File {} is already downloaded.".format(file_path))
+        print(f"File {file_path} is already downloaded.")
         return
     download_file(url, file_path)
 

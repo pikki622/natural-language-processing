@@ -65,11 +65,7 @@ class CornellData:
             for line in f:
                 values = line.split(" +++$+++ ")
 
-                # Extract fields
-                lineObj = {}
-                for i, field in enumerate(fields):
-                    lineObj[field] = values[i]
-
+                lineObj = {field: values[i] for i, field in enumerate(fields)}
                 lines[lineObj['lineID']] = lineObj
 
         return lines
@@ -88,11 +84,7 @@ class CornellData:
             for line in f:
                 values = line.split(" +++$+++ ")
 
-                # Extract fields
-                convObj = {}
-                for i, field in enumerate(fields):
-                    convObj[field] = values[i]
-
+                convObj = {field: values[i] for i, field in enumerate(fields)}
                 # Convert string to list (convObj["utteranceIDs"] == "['L598485', 'L598486', ...]")
                 lineIds = ast.literal_eval(convObj["utteranceIDs"])
 
@@ -139,7 +131,7 @@ class OpensubsData:
         # Hack this to filter on subset of Opensubtitles
         # dirName = "%s/en/Action" % dirName
 
-        print("Loading OpenSubtitles conversations in %s." % dirName)
+        print(f"Loading OpenSubtitles conversations in {dirName}.")
         self.conversations = []
         self.tag_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
         self.conversations = self.loadConversations(dirName)
@@ -159,7 +151,7 @@ class OpensubsData:
                     doc = self.getXML(filepath)
                     conversations.extend(self.genList(doc))
                 except ValueError:
-                    tqdm.write("Skipping file %s with errors." % filepath)
+                    tqdm.write(f"Skipping file {filepath} with errors.")
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
@@ -190,7 +182,7 @@ class OpensubsData:
                         strbuf = ''
                 else:
                     try:
-                        strbuf = strbuf + " " + elem.text
+                        strbuf = f"{strbuf} {elem.text}"
                     except:
                         pass
 
@@ -199,9 +191,7 @@ class OpensubsData:
             cur = sentList[idx]
             nxt = sentList[idx + 1]
             if nxt[1] - cur[2] <= maxDelta and cur and nxt:
-                tmp = {}
-                tmp["lines"] = []
-                tmp["lines"].append(self.getLine(cur[0]))
+                tmp = {"lines": [self.getLine(cur[0])]}
                 tmp["lines"].append(self.getLine(nxt[0]))
                 if self.filter(tmp):
                     conversations.append(tmp)
@@ -209,9 +199,12 @@ class OpensubsData:
         return conversations
 
     def getLine(self, sentence):
-        line = {}
-        line["text"] = self.tag_re.sub('', sentence).replace('\\\'','\'').strip().lower()
-        return line
+        return {
+            "text": self.tag_re.sub('', sentence)
+            .replace('\\\'', '\'')
+            .strip()
+            .lower()
+        }
 
     def filter(self, lines):
         # Use the followint to customize filtering of QA pairs
@@ -227,11 +220,10 @@ class OpensubsData:
 
     def getXML(self, filepath):
         fext = os.path.splitext(filepath)[1]
-        if fext == '.gz':
-            tmp = GzipFile(filename=filepath)
-            return ET.parse(tmp)
-        else:
+        if fext != '.gz':
             return ET.parse(filepath)
+        tmp = GzipFile(filename=filepath)
+        return ET.parse(tmp)
 
     def filesInDir(self, dirname):
         result = []
@@ -243,18 +235,17 @@ class OpensubsData:
 
 
 def extractText(line, fast_preprocessing=True):
-    if fast_preprocessing:
-        GOOD_SYMBOLS_RE = re.compile('[^0-9a-z ]')
-        REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;#+_]')
-        REPLACE_SEVERAL_SPACES = re.compile('\s+')
-
-        line = line.lower()
-        line = REPLACE_BY_SPACE_RE.sub(' ', line)
-        line = GOOD_SYMBOLS_RE.sub('', line)
-        line = REPLACE_SEVERAL_SPACES.sub(' ', line)
-        return line.strip()
-    else:
+    if not fast_preprocessing:
         return nltk.word_tokenize(line)
+    GOOD_SYMBOLS_RE = re.compile('[^0-9a-z ]')
+    REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;#+_]')
+    REPLACE_SEVERAL_SPACES = re.compile('\s+')
+
+    line = line.lower()
+    line = REPLACE_BY_SPACE_RE.sub(' ', line)
+    line = GOOD_SYMBOLS_RE.sub('', line)
+    line = REPLACE_SEVERAL_SPACES.sub(' ', line)
+    return line.strip()
 
 
 def splitConversations(conversations, max_len=20, fast_preprocessing=True):
