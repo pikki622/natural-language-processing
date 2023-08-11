@@ -20,7 +20,7 @@ class BotHandler(object):
 
     def __init__(self, token, dialogue_manager):
         self.token = token
-        self.api_url = "https://api.telegram.org/bot{}/".format(token)
+        self.api_url = f"https://api.telegram.org/bot{token}/"
         self.dialogue_manager = dialogue_manager
 
     def get_updates(self, offset=None, timeout=30):
@@ -29,12 +29,10 @@ class BotHandler(object):
         try:
             resp = raw_resp.json()
         except json.decoder.JSONDecodeError as e:
-            print("Failed to parse response {}: {}.".format(raw_resp.content, e))
+            print(f"Failed to parse response {raw_resp.content}: {e}.")
             return []
 
-        if "result" not in resp:
-            return []
-        return resp["result"]
+        return [] if "result" not in resp else resp["result"]
 
     def send_message(self, chat_id, text):
         params = {"chat_id": chat_id, "text": text}
@@ -71,22 +69,22 @@ def main():
     token = args.token
 
     if not token:
-        if not "TELEGRAM_TOKEN" in os.environ:
+        if "TELEGRAM_TOKEN" not in os.environ:
             print("Please, set bot token through --token or TELEGRAM_TOKEN env variable")
             return
         token = os.environ["TELEGRAM_TOKEN"]
 
     #################################################################
-    
+
     # Your task is to complete dialogue_manager.py and use your 
     # advanced DialogueManager instead of SimpleDialogueManager. 
-    
+
     # This is the point where you plug it into the Telegram bot. 
     # Do not forget to import all needed dependencies when you do so.
-    
+
     simple_manager = SimpleDialogueManager()
     bot = BotHandler(token, simple_manager)
-    
+
     ###############################################################
 
     print("Ready to talk!")
@@ -96,11 +94,11 @@ def main():
         for update in updates:
             print("An update received.")
             if "message" in update:
-                chat_id = update["message"]["chat"]["id"]
                 if "text" in update["message"]:
                     text = update["message"]["text"]
+                    chat_id = update["message"]["chat"]["id"]
                     if is_unicode(text):
-                        print("Update content: {}".format(update))
+                        print(f"Update content: {update}")
                         bot.send_message(chat_id, bot.get_answer(update["message"]["text"]))
                     else:
                         bot.send_message(chat_id, "Hmm, you are sending some weird characters to me...")

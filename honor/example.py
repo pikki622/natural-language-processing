@@ -18,7 +18,7 @@ def main():
     else:
         raise ValueError("Unrecognized dataset: {!r}".format(args.dataset))
 
-    print("Size of dataset: {}".format(len(data)))
+    print(f"Size of dataset: {len(data)}")
     print("First 10 training pairs:")
     for item in data[:10]:
         print(item)
